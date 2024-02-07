@@ -1,13 +1,35 @@
-import { Request, Response } from 'express';
+import { NextFunction, Request, Response } from 'express';
+import { StatusCodes } from 'http-status-codes';
 
+import { CreateCategoryDTO } from '../dtos/categories.dto';
 import { CategoriesService } from '../services/categories.services';
 
 export class CategoriesController {
-  async create(_: Request, res: Response) {
-    const service = new CategoriesService();
+  constructor(private categoriesService: CategoriesService) {}
 
-    const result = await service.create();
+  create = async (
+    req: Request<unknown, unknown, CreateCategoryDTO>,
+    res: Response,
+    next: NextFunction,
+  ) => {
+    try {
+      const { title, color } = req.body;
 
-    return res.status(201).json(result);
-  }
+      const result = await this.categoriesService.create({ title, color });
+
+      return res.status(StatusCodes.CREATED).json(result);
+    } catch (err) {
+      next(err);
+    }
+  };
+
+  index = async (_: Request, res: Response, next: NextFunction) => {
+    try {
+      const result = await this.categoriesService.index();
+
+      return res.status(StatusCodes.OK).json(result);
+    } catch (err) {
+      next(err);
+    }
+  };
 }
