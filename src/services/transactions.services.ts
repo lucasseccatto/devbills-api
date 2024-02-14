@@ -5,6 +5,7 @@ import { TransactionsRepository } from '../database/repositories/transactions.re
 import {
   CreateTransactionDTO,
   GetDashboardDTO,
+  GetFinancialEvolutionDTO,
   IndexTransactionDTO,
 } from '../dtos/transactions.dto';
 import { Balance } from '../entities/balance.entity';
@@ -55,15 +56,16 @@ export class TransactionsService {
     beginDate,
     endDate,
   }: GetDashboardDTO): Promise<{ balance: Balance; expenses: Expense[] }> {
-    let balance = await this.transactionsRepository.getBalance({
-      beginDate,
-      endDate,
-    });
-
-    const expenses = await this.transactionsRepository.getExpenses({
-      beginDate,
-      endDate,
-    });
+    let [balance, expenses] = await Promise.all([
+      this.transactionsRepository.getBalance({
+        beginDate,
+        endDate,
+      }),
+      this.transactionsRepository.getExpenses({
+        beginDate,
+        endDate,
+      }),
+    ]);
 
     if (!balance) {
       balance = new Balance({
@@ -74,5 +76,14 @@ export class TransactionsService {
       });
     }
     return { balance, expenses };
+  }
+
+  async getFinancialEvolution({
+    year,
+  }: GetFinancialEvolutionDTO): Promise<Balance[]> {
+    const financialEvolution =
+      await this.transactionsRepository.getFinancialEvolution({ year });
+
+    return financialEvolution;
   }
 }
